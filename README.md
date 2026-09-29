@@ -62,3 +62,12 @@ illustrator-design-dna/
     ├── illustrator_mcp_server.py      # Zero-dependency JSON-RPC 2.0 MCP Server
     └── setup_illustrator_mcp.py       # Auto-installer for Antigravity, Claude, and Cursor
 ```
+
+---
+
+## What's New in v1.1.0 — Embedded Laya Decision Gate (`NandhaKishorM/laya`)
+
+This skill now embeds **[Laya (`https://github.com/NandhaKishorM/laya`)](https://github.com/NandhaKishorM/laya)** via `scripts/laya_decision_gate.py` with a **Strict Complexity Gate**:
+
+- **Basic Tasks → Direct Manual Execution (Laya Bypassed)**: Simple, explicit commands (*"draw a 200x200 circle at (100, 100)"*, *"change stroke width to 2pt"*, *"export artboard to SVG"*, *"set headline font to Arial-BoldMT"*) bypass Laya completely (`laya_called: false`) and run directly in Adobe Illustrator with zero model overhead.
+- **Complex / Ambiguous Creative Briefs → Laya System-1 Router (`from laya import Router`)**: Only when a task requires multi-branch creative routing (`choice`, `score`, `noul`), `scripts/laya_decision_gate.py` invokes Laya's non-autoregressive `Router` in a single forward pass.

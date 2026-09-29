@@ -11,10 +11,14 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
 CLI_SCRIPT = SCRIPT_DIR / "illustrator_cli.py"
 EXTRACT_SCRIPT = SCRIPT_DIR / "extract_illustrator_dna.py"
 
+from laya_decision_gate import evaluate_decision as _laya_eval  # noqa: E402
+
 TOOLS = [
+    {'name': 'illustrator_laya_decide', 'description': 'Evaluate a creative brief or decision for Adobe Illustrator using the embedded Laya model (https://github.com/NandhaKishorM/laya) with strict complexity gating. CALL ONLY WHEN NECESSARY for complex/ambiguous multi-branch tasks; for basic tasks, execute directly without calling Laya.', 'inputSchema': {'type': 'object', 'properties': {'state': {'type': 'string', 'description': 'The complex user brief or decision state to evaluate.'}, 'force_laya': {'type': 'boolean', 'description': 'Optional override to force Laya Router evaluation (default: false).'}}, 'required': ['state']}},
     {
         "name": "illustrator_status",
         "description": "Check Adobe Illustrator installation and live connection status on macOS or Windows.",
@@ -93,6 +97,12 @@ def run_cmd(cmd: list, timeout: int = 240) -> str:
 
 def handle_call_tool(name: str, args: dict) -> dict:
     try:
+        if name == "illustrator_laya_decide":
+            res = _laya_eval(
+                state_text=args.get("state", ""),
+                force_laya=bool(args.get("force_laya", False)),
+            )
+            return {"content": [{"type": "text", "text": json.dumps(res, indent=2)}]}
         if name == "illustrator_status":
             out = run_cmd([sys.executable, str(CLI_SCRIPT), "status"])
         elif name == "illustrator_inspect_ai":
@@ -147,7 +157,7 @@ def main() -> None:
                 "result": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "illustrator-design-dna", "version": "1.0.0"},
+                    "serverInfo": {"name": "illustrator-design-dna", "version": "1.1.0"},
                 },
             }
         elif method == "notifications/initialized":

@@ -228,3 +228,28 @@ All coordinates `(x, y)` in `vector_spec.json` use **standard top-left design co
 1. **Always Run Live in the Foreground**: Never hide Illustrator in the background. Let the user watch each vector layer and path appear live on the artboard.
 2. **100% Editable Native Vector Output**: Every background, shape, card, button, and text item must live in its proper named layer (`01_BACKGROUND` through `05_CTA_AND_BADGES`) so a human designer can click any anchor point, gradient stop, or text frame and edit it immediately.
 3. **Never Flatten**: Always save the native `.ai` document alongside `.svg` and `.png` preview exports.
+
+---
+
+## Embedded Laya Decision Gate (`NandhaKishorM/laya`) — Call Laya ONLY When Necessary
+
+This skill embeds the **[Laya Non-Autoregressive Decision Model (`https://github.com/NandhaKishorM/laya`)](https://github.com/NandhaKishorM/laya)** inside [`scripts/laya_decision_gate.py`](scripts/laya_decision_gate.py) (`from laya import Router`).
+
+### Strict Execution Policy: When to Call Laya vs. Manual Execution
+
+1. **BASIC / EXPLICIT TASKS → DO NOT CALL LAYA (Execute Directly & Manually)**:
+   - If the user gives a clear, direct, or single-step command (for example: *"draw a 200x200 circle at (100, 100)"*, *"change stroke width to 2pt"*, *"export artboard to SVG"*, *"set headline font to Arial-BoldMT"*), **DO NOT call Laya**.
+   - Execute the step directly using the skill's native CLI/MCP tools to keep execution instant and zero-overhead.
+2. **COMPLEX / AMBIGUOUS MULTI-BRANCH TASKS → CALL LAYA (`laya_decision_gate.py`)**:
+   - Call Laya **only when** a genuine typed decision (`choice`, `score`, `noul`) across multiple creative lanes or ambiguous requirements is needed (for example: *Select the vector geometry language (Bauhaus grid vs. Bento vector cards vs. organic Bezier paths) for a brand brief*; *Determine stroke-to-fill hierarchy and decorative path density across multi-artboard vector systems*).
+   - Run the Laya Decision Gate:
+     ```bash
+     python3 scripts/laya_decision_gate.py --state "<user_brief_or_complex_state>"
+     ```
+   - `laya_decision_gate.py` automatically runs `should_call_laya()` first:
+     - If the task is basic, it immediately returns `"laya_called": false, "execution_mode": "direct_manual_execution"` without loading neural weights.
+     - If the task is genuinely complex, it invokes `laya.Router().predict(...)` in a single forward pass (~33ms) with calibrated confidence gating (`min_confidence=0.55`) and neutral `noul` labels (`{"true": "A", "false": "B"}`).
+   - To install the `laya` neural weights package (`pip install laya`) on a machine:
+     ```bash
+     python3 scripts/laya_decision_gate.py --install
+     ```
